@@ -1,0 +1,117 @@
+@page
+@{
+    ViewData["Title"] = "Filmy";
+}
+
+<div class="card">
+    <h2>Lista Filmów</h2>
+    <div id="addMovieSection" style="display: none;">
+        <button class="btn btn-success" onclick="showAddForm()">Dodaj Film</button>
+    </div>
+</div>
+
+<div id="addFormCard" class="card" style="display: none;">
+    <h3>Dodaj Nowy Film</h3>
+    <form id="addMovieForm">
+        <div class="form-group">
+            <label>Tytuł:</label>
+            <input type="text" id="title" required>
+        </div>
+        <div class="form-group">
+            <label>Opis:</label>
+            <textarea id="description" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Rok produkcji:</label>
+            <input type="number" id="releaseYear" required>
+        </div>
+        <div class="form-group">
+            <label>Gatunek:</label>
+            <input type="text" id="genre">
+        </div>
+        <div class="form-group">
+            <label>Reżyser:</label>
+            <select id="directorId" required></select>
+        </div>
+        <button type="submit" class="btn btn-success">Dodaj</button>
+        <button type="button" class="btn" onclick="hideAddForm()">Anuluj</button>
+    </form>
+</div>
+
+<div id="moviesList" class="movie-grid"></div>
+
+@section Scripts {
+<script>
+    if (token) {
+        document.getElementById('addMovieSection').style.display = 'block';
+    }
+
+    async function loadMovies() {
+        const res = await fetch('/api/movies');
+        const movies = await res.json();
+        const html = movies.map(m => `
+            <div class="movie-card">
+                <h3>${m.title}</h3>
+                <p><strong>Rok:</strong> ${m.releaseYear}</p>
+                <p><strong>Gatunek:</strong> ${m.genre || 'Brak'}</p>
+                <p><strong>Reżyser:</strong> <a href="/directors/${m.directorId}">${m.directorName}</a></p>
+                <p>${m.description || ''}</p>
+                ${token ? `<button class="btn btn-danger" onclick="deleteMovie(${m.id})">Usuń</button>` : ''}
+            </div>
+        `).join('');
+        document.getElementById('moviesList').innerHTML = html;
+    }
+
+    async function loadDirectors() {
+        const res = await fetch('/api/directors');
+        const directors = await res.json();
+        const select = document.getElementById('directorId');
+        select.innerHTML = directors.map(d => 
+            `<option value="${d.id}">${d.firstName} ${d.lastName}</option>`
+        ).join('');
+    }
+
+    function showAddForm() {
+        document.getElementById('addFormCard').style.display = 'block';
+        loadDirectors();
+    }
+
+    function hideAddForm() {
+        document.getElementById('addFormCard').style.display = 'none';
+    }
+
+    document.getElementById('addMovieForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const data = {
+            title: document.getElementById('title').value,
+            description: document.getElementById('description').value,
+            releaseYear: parseInt(document.getElementById('releaseYear').value),
+            genre: document.getElementById('genre').value,
+            directorId: parseInt(document.getElementById('directorId').value)
+        };
+        await fetch('/api/movies', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data)
+        });
+        hideAddForm();
+        e.target.reset();
+        loadMovies();
+    };
+
+    async function deleteMovie(id) {
+        if (confirm('Czy na pewno chcesz usunąć ten film?')) {
+            await fetch(`/api/movies/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadMovies();
+        }
+    }
+
+    loadMovies();
+</script>
+}

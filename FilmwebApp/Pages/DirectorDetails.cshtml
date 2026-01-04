@@ -1,0 +1,51 @@
+@page "/directors/{id:int}"
+@{
+    ViewData["Title"] = "Reżyser";
+}
+
+<div class="card">
+    <a href="/directors" class="btn">Powrót do listy</a>
+    <div id="directorInfo"></div>
+</div>
+
+<div class="card">
+    <h3>Filmy tego reżysera</h3>
+    <div id="moviesList" class="movie-grid"></div>
+</div>
+
+@section Scripts {
+    <script>
+    const directorId = parseInt(window.location.pathname.split('/').pop());
+
+    async function loadDirector() {
+        const res = await fetch(`/api/directors/${directorId}`);
+        const director = await res.json();
+        document.getElementById('directorInfo').innerHTML = `
+            <h2>${director.firstName} ${director.lastName}</h2>
+            <p><strong>Narodowość:</strong> ${director.nationality || 'Brak'}</p>
+            <p><strong>Data urodzenia:</strong> ${director.birthDate ? new Date(director.birthDate).toLocaleDateString('pl-PL') : 'Brak'}</p>
+        `;
+    }
+
+    async function loadMovies() {
+        const res = await fetch(`/api/movies/by-director/${directorId}`);
+        const movies = await res.json();
+        if (movies.length === 0) {
+            document.getElementById('moviesList').innerHTML = '<p>Ten reżyser nie ma jeszcze żadnych filmów w bazie.</p>';
+            return;
+        }
+        const html = movies.map(m => `
+            <div class="movie-card">
+                <h3>${m.title}</h3>
+                <p><strong>Rok:</strong> ${m.releaseYear}</p>
+                <p><strong>Gatunek:</strong> ${m.genre || 'Brak'}</p>
+                <p>${m.description || ''}</p>
+            </div>
+        `).join('');
+        document.getElementById('moviesList').innerHTML = html;
+    }
+
+    loadDirector();
+    loadMovies();
+</script>
+}

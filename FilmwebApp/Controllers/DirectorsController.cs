@@ -49,7 +49,9 @@ public class DirectorsController : ControllerBase
         {
             FirstName = dto.FirstName,
             LastName = dto.LastName,
-            BirthDate = dto.BirthDate,
+            BirthDate = dto.BirthDate.HasValue 
+                ? DateTime.SpecifyKind(dto.BirthDate.Value, DateTimeKind.Utc) 
+                : null,
             Nationality = dto.Nationality
         };
 
@@ -69,7 +71,9 @@ public class DirectorsController : ControllerBase
 
         director.FirstName = dto.FirstName;
         director.LastName = dto.LastName;
-        director.BirthDate = dto.BirthDate;
+        director.BirthDate = dto.BirthDate.HasValue 
+            ? DateTime.SpecifyKind(dto.BirthDate.Value, DateTimeKind.Utc) 
+            : null;
         director.Nationality = dto.Nationality;
 
         await _repository.UpdateAsync(director);

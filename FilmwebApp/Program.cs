@@ -38,6 +38,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AddPageRoute("/Index", "");
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -98,7 +103,17 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"Error applying migrations: {ex.Message}");
-        throw;
+        Console.WriteLine("Trying EnsureCreated...");
+        try
+        {
+            var context = services.GetRequiredService<AppDbContext>();
+            context.Database.EnsureCreated();
+            Console.WriteLine("Database created successfully!");
+        }
+        catch (Exception ex2)
+        {
+            Console.WriteLine($"Error creating database: {ex2.Message}");
+        }
     }
 }
 
@@ -106,14 +121,24 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Filmweb API v1");
-    c.RoutePrefix = string.Empty;
+    c.RoutePrefix = "swagger";
 });
 
 app.UseCors();
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
 
-Console.WriteLine("Application started! Open http://localhost:5000 to see Swagger UI");
+app.MapControllers();
+app.MapRazorPages();
+
+app.MapGet("/", () => Results.Redirect("/Index")).ExcludeFromDescription();
+
+Console.WriteLine("======================================");
+Console.WriteLine("Application started!");
+Console.WriteLine("======================================");
+Console.WriteLine("UI:         http://localhost:8080");
+Console.WriteLine("Swagger:    http://localhost:8080/swagger");
+Console.WriteLine("======================================");
 
 app.Run();

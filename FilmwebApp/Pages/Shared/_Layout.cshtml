@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Filmweb</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        nav { background: #2c3e50; color: white; padding: 15px 0; margin-bottom: 30px; }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        nav h1 { font-size: 24px; }
+        nav .nav-links { display: flex; gap: 20px; align-items: center; }
+        nav a { color: white; text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .btn { display: inline-block; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; }
+        .btn:hover { background: #2980b9; }
+        .btn-danger { background: #e74c3c; margin-left: 10px; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-success { background: #27ae60; }
+        .btn-success:hover { background: #229954; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .movie-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .movie-card h3 { color: #2c3e50; margin-bottom: 10px; }
+        .movie-card p { color: #7f8c8d; margin: 5px 0; }
+        .auth-section { display: flex; gap: 10px; align-items: center; }
+        .alert { padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        #userInfo { display: none; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1>Filmweb</h1>
+            <div class="nav-links">
+                <div id="guestLinks">
+                    <a href="/Login">Zaloguj</a>
+                    <a href="/Register">Zarejestruj</a>
+                </div>
+                <div id="userInfo">
+                    <span id="menu-username"></span>
+                    <a href="#" onclick="logout(); return false;">Wyloguj</a>
+                </div>
+                <a href="/">Filmy</a>
+                <a href="/Directors">Reżyserzy</a>
+                <a href="/swagger">API</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        @RenderBody()
+    </div>
+    <script>
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        if (token && username) {
+            document.getElementById('guestLinks').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('menu-username').textContent = username;
+        }
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/';
+        }
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
