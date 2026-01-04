@@ -9,12 +9,15 @@ REST API do zarządzania filmami i reżyserami z pełną autoryzacją JWT i doku
 docker-compose up --build
 ```
 
-2**Otwórz Swagger UI**:
+2. **UI**:
 ```
-http://localhost:8080
+http://localhost:8080/
 ```
 
-Swagger UI zostanie automatycznie otwarty na głównej stronie.
+3. **Swagger UI**:
+```
+http://localhost:8080/swagger
+```
 
 ## Przykładowe użycie
 
@@ -62,4 +65,3 @@ Otrzymasz JWT w odpowiedzi:
   "directorId": 1
 }
 ```
-
