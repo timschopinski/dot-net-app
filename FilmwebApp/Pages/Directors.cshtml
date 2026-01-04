@@ -1,0 +1,121 @@
+@page
+@{
+ViewData["Title"] = "Reżyserzy";
+}
+
+<div class="card">
+    <h2>Lista Reżyserów</h2>
+    <div id="addDirectorSection" style="display: none;">
+        <button class="btn btn-success" onclick="showAddForm()">Dodaj Reżysera</button>
+    </div>
+</div>
+
+<div id="addFormCard" class="card" style="display: none;">
+    <h3>Dodaj Nowego Reżysera</h3>
+    <form id="addDirectorForm">
+        <div class="form-group">
+            <label>Imię:</label>
+            <input type="text" id="firstName" required>
+        </div>
+        <div class="form-group">
+            <label>Nazwisko:</label>
+            <input type="text" id="lastName" required>
+        </div>
+        <div class="form-group">
+            <label>Data urodzenia:</label>
+            <input type="date" id="birthDate">
+        </div>
+        <div class="form-group">
+            <label>Narodowość:</label>
+            <input type="text" id="nationality">
+        </div>
+        <button type="submit" class="btn btn-success">Dodaj</button>
+        <button type="button" class="btn" onclick="hideAddForm()">Anuluj</button>
+    </form>
+</div>
+
+<div id="directorsList" class="movie-grid"></div>
+
+@section Scripts {
+<script>
+    if (token) {
+        document.getElementById('addDirectorSection').style.display = 'block';
+    }
+
+    async function loadDirectors() {
+        const res = await fetch('/api/directors');
+        const directors = await res.json();
+        const html = directors.map(d => `
+            <div class="movie-card">
+                <h3>${d.firstName} ${d.lastName}</h3>
+                <p><strong>Narodowość:</strong> ${d.nationality || 'Brak'}</p>
+                <p><strong>Data urodzenia:</strong> ${d.birthDate ? new Date(d.birthDate).toLocaleDateString('pl-PL') : 'Brak'}</p>
+                <a href="/directors/${d.id}" class="btn">Zobacz filmy</a>
+                ${token ? `<button class="btn btn-danger" onclick="deleteDirector(${d.id})">Usuń</button>` : ''}
+            </div>
+        `).join('');
+        document.getElementById('directorsList').innerHTML = html;
+    }
+
+    function showAddForm() {
+        document.getElementById('addFormCard').style.display = 'block';
+    }
+
+    function hideAddForm() {
+        document.getElementById('addFormCard').style.display = 'none';
+    }
+
+    document.getElementById('addDirectorForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const birthDateInput = document.getElementById('birthDate').value;
+
+        // Konwertuj datę na ISO string z UTC jeśli podana
+        let birthDate = null;
+        if (birthDateInput) {
+            const date = new Date(birthDateInput);
+            birthDate = date.toISOString();
+        }
+
+        const data = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            birthDate: birthDate,
+            nationality: document.getElementById('nationality').value
+        };
+
+        try {
+            const response = await fetch('/api/directors', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                hideAddForm();
+                e.target.reset();
+                loadDirectors();
+            } else {
+                const error = await response.text();
+                alert('Błąd: ' + error);
+            }
+        } catch (err) {
+            alert('Błąd sieci: ' + err.message);
+        }
+    };
+
+    async function deleteDirector(id) {
+        if (confirm('Czy na pewno chcesz usunąć tego reżysera? Zostaną usunięte wszystkie jego filmy!')) {
+            await fetch(`/api/directors/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadDirectors();
+        }
+    }
+
+    loadDirectors();
+</script>
+}

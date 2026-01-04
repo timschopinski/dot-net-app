@@ -10,15 +10,19 @@ using FilmwebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDirectorRepository, DirectorRepository>();
 builder.Services.AddScoped<IMovieRepository, MovieRepository>();
 
+// Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "SuperSecretKeyForDevelopment123456789";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -38,6 +42,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+// Dodaj Razor Pages z konfiguracją
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AddPageRoute("/Index", "");
+});
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -73,6 +84,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -85,6 +97,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Auto-migrate database
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -98,22 +111,45 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"Error applying migrations: {ex.Message}");
-        throw;
+        Console.WriteLine("Trying EnsureCreated...");
+        try
+        {
+            var context = services.GetRequiredService<AppDbContext>();
+            context.Database.EnsureCreated();
+            Console.WriteLine("Database created successfully!");
+        }
+        catch (Exception ex2)
+        {
+            Console.WriteLine($"Error creating database: {ex2.Message}");
+        }
     }
 }
 
+// Swagger
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Filmweb API v1");
-    c.RoutePrefix = string.Empty;
+    c.RoutePrefix = "swagger";
 });
 
 app.UseCors();
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
 
-Console.WriteLine("Application started! Open http://localhost:5000 to see Swagger UI");
+// Mapuj kontrolery API i Razor Pages
+app.MapControllers();
+app.MapRazorPages();
+
+// Wyłącz domyślne pliki statyczne i dodaj tylko przekierowanie root
+app.MapGet("/", () => Results.Redirect("/Index")).ExcludeFromDescription();
+
+Console.WriteLine("======================================");
+Console.WriteLine("Application started!");
+Console.WriteLine("======================================");
+Console.WriteLine("UI:         http://localhost:8080");
+Console.WriteLine("Swagger:    http://localhost:8080/swagger");
+Console.WriteLine("======================================");
 
 app.Run();
