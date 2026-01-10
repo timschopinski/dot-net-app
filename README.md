@@ -65,3 +65,27 @@ Otrzymasz JWT w odpowiedzi:
   "directorId": 1
 }
 ```
+
+# Screenshots
+
+## 1. Landing Page
+![Landing Page](docs/01-landing-page.png)
+
+## 2. Rejestracja
+![Rejestracja](docs/02-register.png)
+
+## 3. Logowanie
+![Logowanie](docs/03-login.png)
+
+## 4. Filmy
+![Filmy](docs/04-movies.png)
+
+## 5. Lista Reżyserów
+![Reżyserzy](docs/05-directors.png)
+
+## 6. Filmy reżysera
+![Filmy reżysera](docs/06-director-movies.png)
+
+## 7. Dokumentacja Swagger
+![Swagger](docs/07-api.png)
+
